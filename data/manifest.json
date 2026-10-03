@@ -1,0 +1,11 @@
+{
+  "builtAt": "2026-10-03T22:52:51+00:00",
+  "files": {
+    "dedup.enc.json": {
+      "groups": 58,
+      "groupsToDecide": 30,
+      "records": 160,
+      "pairs": 108
+    }
+  }
+}

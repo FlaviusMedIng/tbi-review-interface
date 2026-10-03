@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://api.github.com https://api.crossref.org https://api.openalex.org https://api.unpaywall.org; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="robots" content="noindex, nofollow">
+<title>Revue de portée – validation</title>
+<link rel="stylesheet" href="style.css">
+<script src="crypto.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+
+<!-- Écran de déverrouillage -->
+<section id="unlock" class="unlock" aria-labelledby="unlock-title">
+  <form id="unlock-form" class="unlock-box">
+    <h1 id="unlock-title">Revue de portée — validation</h1>
+    <p>Les données sont chiffrées. Saisissez la phrase de passe transmise par l'auteur.</p>
+    <label for="passphrase">Phrase de passe</label>
+    <input id="passphrase" type="password" autocomplete="current-password" required>
+    <label class="check"><input id="remember-session" type="checkbox"> Garder déverrouillé jusqu'à la fermeture de l'onglet</label>
+    <button type="submit" class="primary">Déverrouiller</button>
+    <p id="unlock-msg" class="msg" role="status" aria-live="polite"></p>
+    <p id="manifest-info" class="muted small"></p>
+  </form>
+</section>
+
+<!-- Application -->
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="brand">Revue de portée — validation</div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button role="tab" id="tab-dedup" aria-controls="panel-dedup" aria-selected="true">Doublons à confirmer</button>
+      <button role="tab" id="tab-blind" aria-controls="panel-blind" aria-selected="false" tabindex="-1">Criblage à l'aveugle</button>
+      <button role="tab" id="tab-doi" aria-controls="panel-doi" aria-selected="false" tabindex="-1">Contrôle des DOI</button>
+      <button role="tab" id="tab-tasks" aria-controls="panel-tasks" aria-selected="false" tabindex="-1">Tâches</button>
+    </nav>
+    <div class="who">
+      <span id="who-label" class="muted">Relecteur : —</span>
+      <span id="sync-status" class="badge" role="status" aria-live="polite"></span>
+      <button id="open-settings" type="button">Réglages</button>
+      <button id="lock" type="button" title="Effacer les données déchiffrées de la mémoire">Verrouiller</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="panel-dedup" role="tabpanel" aria-labelledby="tab-dedup" class="panel dedup">
+      <aside class="sidebar" aria-label="Liste des groupes">
+        <fieldset class="filters">
+          <legend class="sr-only">Filtre</legend>
+          <label><input type="radio" name="filter" value="todo" checked> À décider</label>
+          <label><input type="radio" name="filter" value="done"> Décidés</label>
+          <label><input type="radio" name="filter" value="all"> Tous</label>
+        </fieldset>
+        <label for="search" class="sr-only">Rechercher</label>
+        <input id="search" type="search" placeholder="Rechercher (titre, clé, DOI, auteur)…">
+        <p id="list-count" class="muted small" aria-live="polite"></p>
+        <ul id="group-list" class="group-list"></ul>
+        <div class="sidebar-actions">
+          <button id="push-all" type="button">Envoyer mes décisions sur GitHub</button>
+          <button id="download" type="button">Télécharger mes décisions (JSON)</button>
+        </div>
+      </aside>
+      <section id="detail" class="detail" aria-live="polite" tabindex="-1">
+        <p class="muted">Choisissez un groupe dans la liste (raccourcis : <kbd>n</kbd> suivant, <kbd>p</kbd> précédent).</p>
+      </section>
+    </section>
+
+    <section id="panel-blind" role="tabpanel" aria-labelledby="tab-blind" class="panel placeholder" hidden>
+      <h2>Criblage à l'aveugle</h2><p class="muted">À venir : décisions d'inclusion à l'aveugle sur titre et résumé.</p>
+    </section>
+    <section id="panel-doi" role="tabpanel" aria-labelledby="tab-doi" class="panel placeholder" hidden>
+      <h2>Contrôle des DOI</h2><p class="muted">À venir : validation des DOI suspects ou contestés.</p>
+    </section>
+    <section id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks" class="panel placeholder" hidden>
+      <h2>Tâches</h2><p class="muted">À venir : liste des tâches par personne.</p>
+    </section>
+  </main>
+</div>
+
+<!-- Réglages -->
+<dialog id="settings" aria-labelledby="settings-title">
+  <form id="settings-form" method="dialog">
+    <h2 id="settings-title">Réglages</h2>
+    <label for="reviewer">Nom du relecteur (minuscules, chiffres, - ou _)</label>
+    <input id="reviewer" pattern="[a-z0-9_\-]{1,40}" required autocomplete="username">
+    <label for="token">Jeton GitHub (fine-grained, ce dépôt seulement, Contents : lecture et écriture)</label>
+    <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_… (facultatif)">
+    <p class="warning">Le jeton est conservé en clair dans le stockage local de <strong>ce navigateur uniquement</strong>.
+      N'enregistrez-le pas sur un ordinateur partagé. Effacez-le après usage ; révoquez-le sur GitHub en cas de doute.</p>
+    <p id="settings-msg" class="msg" role="status" aria-live="polite"></p>
+    <div class="row">
+      <button type="button" id="test-token">Tester l'accès</button>
+      <button type="button" id="clear-token" class="danger">Effacer le jeton</button>
+      <span class="grow"></span>
+      <button type="button" id="settings-cancel">Annuler</button>
+      <button type="submit" id="settings-save" class="primary" value="save">Enregistrer</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>
