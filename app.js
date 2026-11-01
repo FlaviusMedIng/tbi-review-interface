@@ -6,7 +6,6 @@
   var CONFIG = {
     repo: 'FlaviusMedIng/TBI_scoping_review',
     decisionsDir: 'data/screening/ui_decisions',
-    contactEmail: 'flavius.timis@etu.unige.ch',
     dataUrl: 'data/dedup.enc.json',
     manifestUrl: 'data/manifest.json'
   };
@@ -609,9 +608,20 @@
     }
     return { lines: ['Pas de version en accès libre connue.'] };
   }
+  // Contact e-mail for the CrossRef/OpenAlex/Unpaywall polite pools: asked once and kept in this browser only
+  // (never written in the public site's code, 2026-11-01).
+  function contactEmail() {
+    var m = '';
+    try { m = localStorage.getItem('contactEmail') || ''; } catch (e) {}
+    if (!m) {
+      m = (window.prompt('Adresse e-mail pour CrossRef / OpenAlex / Unpaywall (gardée seulement dans ce navigateur) :') || '').trim();
+      try { if (m) localStorage.setItem('contactEmail', m); } catch (e) {}
+    }
+    return m;
+  }
   async function loadLive(r) {
     if (!r.doi) return;
-    var p = doiPath(r.doi), mail = encodeURIComponent(CONFIG.contactEmail);
+    var p = doiPath(r.doi), mail = encodeURIComponent(contactEmail());
     var results = await Promise.all([
       cached('https://api.crossref.org/works/' + p + '?mailto=' + mail),
       cached('https://api.openalex.org/works/doi:' + p + '?mailto=' + mail),
